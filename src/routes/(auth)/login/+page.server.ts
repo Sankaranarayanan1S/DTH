@@ -14,6 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 const login: Action = async ({ cookies, request }) => {
+	console.log('login action');
 	const data = await request.formData();
 	const username = data.get('username');
 	const password = data.get('password');
@@ -25,7 +26,7 @@ const login: Action = async ({ cookies, request }) => {
 	const [[user]]: [[userType]] = await db.execute('SELECT * FROM login WHERE user_name = ?', [
 		username
 	]);
-	// console.log("user from login", user);
+	console.log('user from login', user);
 	if (!user) {
 		return fail(400, { credentials: true });
 	}
@@ -40,18 +41,18 @@ const login: Action = async ({ cookies, request }) => {
 	const accessToken = jwt.sign(
 		{
 			userInfo: {
-				username: user.username,
+				username: user.user_name,
 				role: user.role,
-				status: user.status,
-				firstTime: user.firstTime
+				status: user.status || 'active'
 			}
 		},
 		ACCESS_TOKEN_SECRET,
 		{ expiresIn: '1d' }
 	);
+	console.log('accessToken:', accessToken);
 	const [authenticatedUserResult] = await db.execute(
-		'UPDATE users SET userAuthToken = ? WHERE username = ?',
-		[accessToken, user.username]
+		'UPDATE login SET refreshtoken = ? WHERE user_name = ?',
+		[accessToken, user.user_name]
 	);
 	console.log('authenticatedUserResult:', authenticatedUserResult);
 	cookies.set('session', accessToken, {

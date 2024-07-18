@@ -7,7 +7,7 @@
 	<h1 class="text-2xl">
 		<b>NITI Aayog Dashboard</b>
 	</h1>
-	<form action="/logout">
+	<form action="/logout" method="post">
 		<Button type="submit">Log Out</Button>
 	</form>
 </header>
