@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Q1card from '$lib/components/Q1card.svelte';
+	import Qcard from '$lib/components/Qcard.svelte';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import {
 		Select,
@@ -26,8 +26,9 @@
 
 		<div class="mb-8 flex w-full justify-between">
 			<div class="flex items-center gap-4">
-				<p class="text-nowrap">Financial Year:</p>
-				<form id="financial_year">
+				<p class="text-nowrap">Financial Year: 2024-2025</p>
+
+				<!-- <form id="financial_year">
 					<Select name="year">
 						<SelectTrigger class="">
 							<SelectValue placeholder="Select" />
@@ -43,7 +44,7 @@
 							</SelectGroup>
 						</SelectContent>
 					</Select>
-				</form>
+				</form> -->
 			</div>
 		</div>
 		<Tabs value="Q1" class="w-full">
@@ -55,18 +56,18 @@
 			</TabsList>
 
 			<TabsContent value="Q1">
-				<Q1card />
+				<Qcard institute={data.data.institute} quater="q1" />
 			</TabsContent>
 			<TabsContent value="Q2">
-				<SettingsForm data={data.form} />
+				<Qcard institute={data.data.institute} quater="q2" />
 			</TabsContent>
 
 			<TabsContent value="Q3">
-				<SettingsForm data={data.form} />
+				<Qcard institute={data.data.institute} quater="q3" />
 			</TabsContent>
 
 			<TabsContent value="Q4">
-				<SettingsForm data={data.form} />
+				<Qcard institute={data.data.institute} quater="q4" />
 			</TabsContent>
 		</Tabs>
 	</div>
