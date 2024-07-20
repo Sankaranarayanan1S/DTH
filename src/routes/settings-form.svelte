@@ -1,14 +1,15 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import { formSchema, type FormSchema } from './schema';
+	import { formSchema, type FormSchema } from '$lib/components/schema';
 	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { Fieldset, Legend, ElementField } from 'formsnap';
 	export let data: SuperValidated<Infer<FormSchema>>;
 
 	const form = superForm(data, {
-		validators: zodClient(formSchema)
+		validators: zodClient(formSchema),
+		dataType: 'json'
 	});
 
 	const { form: formData, enhance } = form;
@@ -22,7 +23,7 @@
 	}
 </script>
 
-<form method="POST" use:enhance>
+<form method="POST" action="?/setting" use:enhance>
 	<Form.Fieldset {form} name="urls">
 		<Form.Legend>username</Form.Legend>
 		{#each $formData.urls as _, i}
