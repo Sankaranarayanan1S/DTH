@@ -32,15 +32,17 @@
 				<Qcard institute={data.data.institute} quater="q1" dataform={data.form2} />
 			</TabsContent>
 			<TabsContent value="Q2">
-				<!-- <Qcard institute={data.data.institute} quater="q2" /> -->
-				<SettingsForm data={data.form} />
+				<Qcard institute={data.data.institute} quater="q2" dataform={data.form2} />
+				<!-- <SettingsForm data={data.form} /> -->
 			</TabsContent>
 
 			<TabsContent value="Q3">
+				<Qcard institute={data.data.institute} quater="q3" dataform={data.form2} />
 				<!-- <Qcard institute={data.data.institute} quater="q3" /> -->
 			</TabsContent>
 
 			<TabsContent value="Q4">
+				<Qcard institute={data.data.institute} quater="q4" dataform={data.form2} />
 				<!-- <Qcard institute={data.data.institute} quater="q4" /> -->
 			</TabsContent>
 		</Tabs>

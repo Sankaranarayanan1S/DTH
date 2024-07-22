@@ -66,8 +66,9 @@ const courseCategories = [
 
 const nonEmptyString = z.string().min(1, 'This field cannot be empty');
 
-const formEntrySchema = z
+export const formEntrySchema = z
 	.object({
+		id: z.coerce.number().optional(),
 		chennal_no: z.enum(channelNumbers, { message: 'Invalid channel number' }),
 		course_name: z.enum(courseNames, { message: 'Invalid course name' }),
 		coursename_others: z.string().optional(),
@@ -142,3 +143,4 @@ export const formSchema2 = z.object({
 
 export type FormSchema2 = typeof formSchema2;
 export type FormSchema = typeof formSchema;
+export type FormEntrySchema = typeof formEntrySchema;
