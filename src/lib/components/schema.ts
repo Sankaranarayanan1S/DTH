@@ -55,7 +55,22 @@ const courseNames = Object.values(course_name).flat();
 const disciplines = Object.values(discipline).flat();
 const financialYears = ['yes', 'no'] as const;
 const courseStatuses = ['completed', 'ongoing'] as const;
-const languages = ['english', 'hindi', 'spanish'] as const;
+const languages = [
+	'Assamese',
+	'Bengali',
+	'English',
+	'Gujarati',
+	'Hindi',
+	'Kannada',
+	'Kashmiri',
+	'Malayalam',
+	'Marathi',
+	'Punjabi',
+	'Sanskrit',
+	'Tamil',
+	'Telugu',
+	'Urdu'
+] as const;
 const courseCategories = [
 	'studio_based_recording',
 	'live_sessions',
