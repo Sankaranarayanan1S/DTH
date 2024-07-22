@@ -33,7 +33,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/login');
 	}
 	const [results, fields]: [CourseDetails[]] = await db.execute(
-		'SELECT id, year, quater, chennal_no, course_name, discipline, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, coordinating_institute FROM course_details WHERE coordinating_institute = (SELECT institute FROM login WHERE user_name = ?)',
+		'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, coordinating_institute FROM course_details WHERE coordinating_institute = (SELECT institute FROM login WHERE user_name = ?)',
 		[locals?.user?.username]
 	);
 
@@ -52,7 +52,7 @@ export const actions: Actions = {
 		}
 		try {
 			const [result] = await db.execute(
-				`Update  course_details set chennal_no = ?, course_name = ?, discipline = ?, total_duration = ?,
+				`Update  course_details set chennal_no = ?, course_name = ?,coursename_others=?, discipline = ?, total_duration = ?,
 				  course_reported_financial_year = ?, quater = ?, sme_name = ?, sme_institute = ?, no_of_videos = ?, course_status = ?, language = ?, 
 				  course_category = ?, coordinating_institute = ?, coursename_others = ?, discipline_others = ? where id = ?`,
 				[

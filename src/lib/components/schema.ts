@@ -49,7 +49,8 @@ const channelNumbers = [
 	'36',
 	'37',
 	'38',
-	'39'
+	'39',
+	'cross content'
 ] as const;
 const courseNames = Object.values(course_name).flat();
 const disciplines = Object.values(discipline).flat();

@@ -56,16 +56,16 @@
 	}
 
 	let institute_wise_channels = {
-		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40'],
-		IGNOU: ['11', '12', '13', '14', '15', '16'],
-		'IIT Bombay': ['17', '18', '19', '20'],
-		'IIT Delhi': ['21', '22'],
-		'IIT Gandhinagar': ['23'],
-		'IIT Kanpur': ['24', '25', '26', '27', '28'],
+		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40','cross cotent'],
+		IGNOU: ['11', '12', '13', '14', '15', '16','cross cotent'],
+		'IIT Bombay': ['17', '18', '19', '20','cross cotent'],
+		'IIT Delhi': ['21', '22','cross cotent'],
+		'IIT Gandhinagar': ['23','cross cotent'],
+		'IIT Kanpur': ['24', '25', '26', '27', '28','cross cotent'],
 		'IIT Kharagpur': ['29', '30'],
-		'IIT Madras': ['31', '32', '33', '34', '35', '36'],
-		'IIT Tirupati': ['37', '38'],
-		'University of Hyderabad': ['39']
+		'IIT Madras': ['31', '32', '33', '34', '35', '36','cross cotent'],
+		'IIT Tirupati': ['37', '38','cross cotent'],
+		'University of Hyderabad': ['39','cross cotent']
 	};
 
 	let channel_nos: string[] = [];
@@ -148,7 +148,7 @@
 				{#if showCustomCourseName}
 					<Form.Field {form} name="entries[{index}].coursename_others">
 						<Form.Control let:attrs>
-							<Form.Label>Non approved course Name</Form.Label>
+							<Form.Label>Additional Course name</Form.Label>
 							<span class="text-red-700"> *</span>
 							<Input
 								type="text"

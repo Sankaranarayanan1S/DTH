@@ -293,6 +293,10 @@
 			header: 'Course Name'
 		}),
 		table.column({
+			accessor: 'coursename_others',
+			header: 'Additional Course Name '
+		}),
+		table.column({
 			accessor: 'language',
 			header: 'Language'
 		}),
@@ -355,6 +359,7 @@
 		'quater',
 		'chennal_no',
 		'course_name',
+		'coursename_others',
 		'discipline',
 		'total_duration',
 		'course_reported_financial_year',

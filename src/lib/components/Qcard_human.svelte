@@ -140,7 +140,7 @@
 
 				{#if showCustomCourseName}
 					<div class="space-y-1">
-						<Label for="custom_course_name">Non approved course Name</Label>
+						<Label for="custom_course_name">Additional Course name</Label>
 						<span class="text-red-700"> *</span>
 						<Input id="custom_course_name" name="custom_course_name" type="text" required />
 					</div>
