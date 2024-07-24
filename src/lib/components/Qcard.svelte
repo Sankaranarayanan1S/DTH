@@ -63,8 +63,31 @@
 	let institute_wise_channels = {
 		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40','Cross Content'],
 		CEC1: ['1','Cross Content'],
+		CEC2: ['2','Cross Content'],
+		CEC3: ['3','Cross Content'],
+		CEC4: ['4','Cross Content'],
+		CEC5: ['5','Cross Content'],
+		CEC6: ['6','Cross Content'],
+		CEC7: ['7','Cross Content'],
+		CEC8: ['8','Cross Content'],
+		CEC9: ['9','Cross Content'],
+		CEC10: ['10','Cross Content'],
+		CEC40: ['40','Cross Content'],
 
 		IGNOU: ['11', '12', '13', '14', '15', '16','Cross Content'],
+		IGNOU11: ['11','Cross Content'],
+		IGNOU12: ['12','Cross Content'],
+
+		IGNOU13: ['13','Cross Content'],
+
+		IGNOU14: ['14','Cross Content'],
+
+		IGNOU15: ['15','Cross Content'],
+
+		IGNOU16: [ '16','Cross Content'],
+
+
+
 		'IIT Bombay': ['17', '18', '19', '20','Cross Content'],
 		'IIT Delhi': ['21', '22','Cross Content'],
 		'IIT Gandhinagar': ['23','Cross Content'],
