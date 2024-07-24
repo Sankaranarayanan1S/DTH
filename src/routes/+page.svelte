@@ -11,7 +11,7 @@
 	<div class="mx-auto my-16 max-w-7xl items-center rounded-lg border bg-white p-8 py-16 shadow-md">
 		<div>
 			<!-- <Label for="coordinating_nc" class="text-nowrap"> -->
-			<p class="text-center text-3xl">Welcome : {data.data.institute}</p>
+			<p class="text-center text-3xl">Welcome : {data.data.admin_institute}</p>
 			<!-- </Label> -->
 		</div>
 
@@ -29,20 +29,20 @@
 			</TabsList>
 
 			<TabsContent value="Q1">
-				<Qcard institute={data.data.institute} quater="q1" dataform={data.form2} />
+				<Qcard institute={data.data.institute} admin_institute={data.data.admin_institute}  quater="q1" dataform={data.form2} />
 			</TabsContent>
 			<TabsContent value="Q2">
-				<Qcard institute={data.data.institute} quater="q2" dataform={data.form2} />
+				<Qcard institute={data.data.institute} admin_institute={data.data.admin_institute} quater="q2" dataform={data.form2} />
 				<!-- <SettingsForm data={data.form} /> -->
 			</TabsContent>
 
 			<TabsContent value="Q3">
-				<Qcard institute={data.data.institute} quater="q3" dataform={data.form2} />
+				<Qcard institute={data.data.institute}  admin_institute={data.data.admin_institute} quater="q3"  dataform={data.form2} />
 				<!-- <Qcard institute={data.data.institute} quater="q3" /> -->
 			</TabsContent>
 
 			<TabsContent value="Q4">
-				<Qcard institute={data.data.institute} quater="q4" dataform={data.form2} />
+				<Qcard institute={data.data.institute} admin_institute={data.data.admin_institute} quater="q4" dataform={data.form2} />
 				<!-- <Qcard institute={data.data.institute} quater="q4" /> -->
 			</TabsContent>
 		</Tabs>

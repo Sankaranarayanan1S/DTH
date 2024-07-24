@@ -12,6 +12,7 @@
 	import { formSchema2, type FormSchema2 } from './schema';
 
 	export let institute: string;
+	export let admin_institute: string;
 	export let quater: string;
 	export let dataform: SuperValidated<Infer<FormSchema2>>;
 
@@ -22,6 +23,8 @@
 			for (let index = 0; index < $formData.entries.length; index++) {
 				$formData.entries[index].quater = quater;
 				$formData.entries[index].coordinating_institute = institute;
+				$formData.entries[index].admin_institute = admin_institute;
+
 			}
 
 			console.log('input:::::', JSON.stringify(input));
@@ -46,7 +49,9 @@
 				course_status: '' as 'completed',
 				language: '' as 'english',
 				course_category: '' as 'studio_based_recording',
-				coordinating_institute: institute
+				coordinating_institute: institute,
+				admin_institute: admin_institute
+
 			}
 		];
 	}
@@ -57,6 +62,8 @@
 
 	let institute_wise_channels = {
 		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40','Cross Content'],
+		CEC1: ['1','Cross Content'],
+
 		IGNOU: ['11', '12', '13', '14', '15', '16','Cross Content'],
 		'IIT Bombay': ['17', '18', '19', '20','Cross Content'],
 		'IIT Delhi': ['21', '22','Cross Content'],

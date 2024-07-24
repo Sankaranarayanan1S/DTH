@@ -10,10 +10,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/login');
 	}
-	const [[results], fields]: [[results: { institute: string }]] = await db.execute(
-		'SELECT institute FROM login WHERE user_name = ?',
-		[locals?.user?.username]
-	);
+	const [[results], fields]: [[results: { institute: string; admin_institute: string }]] =
+		await db.execute('SELECT institute,admin_institute FROM login WHERE user_name = ?', [
+			locals?.user?.username
+		]);
 	console.log('results:', results);
 
 	return {
@@ -51,9 +51,9 @@ export const actions: Actions = {
 				  chennal_no, course_name, discipline, total_duration, 
 				  course_reported_financial_year, quater, sme_name, 
 				  sme_institute, no_of_videos, course_status, language, 
-				  course_category, coordinating_institute, coursename_others, 
+				  course_category, coordinating_institute,admin_institute,coursename_others, 
 				  discipline_others
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,? ,?, ?, ?, ?, ?)`,
 					[
 						element.chennal_no,
 						element.course_name,
@@ -68,6 +68,7 @@ export const actions: Actions = {
 						element.language,
 						element.course_category,
 						element.coordinating_institute,
+						element.admin_institute,
 						element.coursename_others,
 						element.discipline_others
 					]

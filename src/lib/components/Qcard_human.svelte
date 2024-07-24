@@ -38,7 +38,8 @@
 				course_status: '' as 'completed',
 				language: '' as 'english',
 				course_category: '' as 'studio_based_recording',
-				coordinating_institute: ''
+				coordinating_institute: '',
+				admin_institute:''
 			}
 		];
 	}

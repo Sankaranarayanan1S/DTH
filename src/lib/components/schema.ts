@@ -50,7 +50,7 @@ const channelNumbers = [
 	'37',
 	'38',
 	'39',
-	'cross content'
+	'Cross Content'
 ] as const;
 const courseNames = Object.values(course_name).flat();
 const disciplines = Object.values(discipline).flat();
@@ -107,7 +107,8 @@ export const formEntrySchema = z
 		course_status: z.enum(courseStatuses, { message: 'Invalid course status' }),
 		language: z.enum(languages, { message: 'Invalid language' }),
 		course_category: z.enum(courseCategories, { message: 'Invalid course category' }),
-		coordinating_institute: nonEmptyString
+		coordinating_institute: nonEmptyString,
+		admin_institute: nonEmptyString
 	})
 	.superRefine((data, ctx) => {
 		if (data.course_name.toLowerCase() === 'other') {
@@ -152,7 +153,8 @@ export const formSchema2 = z.object({
 				course_status: '' as 'completed',
 				language: '' as 'english',
 				course_category: '' as 'studio_based_recording',
-				coordinating_institute: ''
+				coordinating_institute: '',
+				admin_institute: ''
 			}
 		])
 });

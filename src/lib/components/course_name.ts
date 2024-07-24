@@ -205,6 +205,7 @@ export const course_name = {
 	],
 
 	CEC: ['course name', 'other'],
+	CEC1: ['course name', 'other'],
 
 	'IIT Kanpur': [
 		'Reading Ambedkar (Hindi)',
