@@ -23,7 +23,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Form from '$lib/components/ui/form';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
+	import SuperDebug, { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
 	import {
 		formEntrySchema,
 		formSchema2,
@@ -105,16 +105,16 @@
 	};
 
 	let institute_wise_channels = {
-		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40','Cross Content'],
-		IGNOU: ['11', '12', '13', '14', '15', '16','Cross Content'],
-		'IIT Bombay': ['17', '18', '19', '20','Cross Content'],
-		'IIT Delhi': ['21', '22','Cross Content'],
-		'IIT Gandhinagar': ['23','Cross Content'],
-		'IIT Kanpur': ['24', '25', '26', '27', '28','Cross Content'],
-		'IIT Kharagpur': ['29', '30','Cross Content'],
-		'IIT Madras': ['31', '32', '33', '34', '35', '36','Cross Content'],
-		'IIT Tirupati': ['37', '38','Cross Content'],
-		'University of Hyderabad': ['39','Cross Content']
+		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40', 'Cross Content'],
+		IGNOU: ['11', '12', '13', '14', '15', '16', 'Cross Content'],
+		'IIT Bombay': ['17', '18', '19', '20', 'Cross Content'],
+		'IIT Delhi': ['21', '22', 'Cross Content'],
+		'IIT Gandhinagar': ['23', 'Cross Content'],
+		'IIT Kanpur': ['24', '25', '26', '27', '28', 'Cross Content'],
+		'IIT Kharagpur': ['29', '30', 'Cross Content'],
+		'IIT Madras': ['31', '32', '33', '34', '35', '36', 'Cross Content'],
+		'IIT Tirupati': ['37', '38', 'Cross Content'],
+		'University of Hyderabad': ['39', 'Cross Content']
 	};
 
 	// export let institute: string;
@@ -139,6 +139,7 @@
 			// $formData.id = $formData.id;
 			// $formData.coursename_others = $formData.coursename_others;
 			// $formData.discipline_others = $formData.discipline_others;
+			$formData.admin_institute = 'dummy data';
 			delete $formData.year;
 			console.log('input:::::', JSON.stringify($formData, null, 2));
 		},
@@ -385,6 +386,7 @@
 	}
 </script>
 
+<!-- <SuperDebug data={$formData} /> -->
 <main class="flex h-full min-h-dvh flex-col bg-orange-50">
 	<div class="mx-auto my-12 w-11/12 rounded-2xl bg-white p-8 shadow-lg">
 		<!-- {#if isLoading}

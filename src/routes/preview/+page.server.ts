@@ -35,14 +35,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 	if (locals.user.username == 'CEC' || locals.user.username == 'IGNOU') {
 		const [results, fields]: [CourseDetails[]] = await db.execute(
-			'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, admin_institute as coordinating_institute FROM course_details WHERE admin_institute = (SELECT admin_institute FROM login WHERE user_name = ?)',
+			'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, discipline_others, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, admin_institute as coordinating_institute FROM course_details WHERE admin_institute = (SELECT admin_institute FROM login WHERE user_name = ?)',
 			[locals?.user?.username]
 		);
 		console.log('preview:', results);
 		return { results, form2: await superValidate(zod(formEntrySchema)) };
 	} else {
 		const [results, fields]: [CourseDetails[]] = await db.execute(
-			'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, admin_institute as coordinating_institute FROM course_details WHERE coordinating_institute = (SELECT institute FROM login WHERE user_name = ?)',
+			'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, discipline_others, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, admin_institute as coordinating_institute FROM course_details WHERE coordinating_institute = (SELECT institute FROM login WHERE user_name = ?)',
 			[locals?.user?.username]
 		);
 		console.log('preview:', results);
@@ -67,6 +67,7 @@ export const actions: Actions = {
 				[
 					form.data.chennal_no,
 					form.data.course_name,
+					form.data.coursename_others ?? '',
 					form.data.discipline,
 					form.data.total_duration,
 					form.data.course_reported_financial_year,
