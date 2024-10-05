@@ -7,7 +7,7 @@ import { db } from '$lib/server/dbConfig';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// redirect user if not logged in
-	if (!locals.user) {
+	if (!locals.user || locals.user.role != 'admin') {
 		throw redirect(302, '/login');
 	}
 	const [[results], fields]: [[results: { institute: string; admin_institute: string }]] =

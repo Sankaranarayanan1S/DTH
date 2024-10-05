@@ -68,7 +68,10 @@ const login: Action = async ({ cookies, request }) => {
 		// set cookie to expire after a month
 		maxAge: 60 * 60 * 24 * 30
 	});
-
+	if (user.role == 'admin') {
+		// redirect the user
+		throw redirect(302, '/admin');
+	}
 	// redirect the user
 	throw redirect(302, '/');
 };
