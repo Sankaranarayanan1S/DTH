@@ -402,9 +402,9 @@
 			Download CSV
 		</Button>
 		&nbsp; -->
-		<Button>
+		<!-- <Button>
 			<a href="/">Home page</a>
-		</Button>
+		</Button> -->
 
 		<div>
 			<div class="flex items-center py-4">

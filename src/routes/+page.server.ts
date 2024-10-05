@@ -7,8 +7,11 @@ import { db } from '$lib/server/dbConfig';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	// redirect user if not logged in
-	if (!locals.user || locals.user.role != 'admin') {
+	if (!locals.user) {
 		throw redirect(302, '/login');
+	}
+	if (locals.user.role == 'admin') {
+		throw redirect(302, '/admin');
 	}
 	const [[results], fields]: [[results: { institute: string; admin_institute: string }]] =
 		await db.execute('SELECT institute,admin_institute FROM login WHERE user_name = ?', [
