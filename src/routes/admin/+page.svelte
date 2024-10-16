@@ -615,9 +615,20 @@
 										<Select.Value placeholder="Select Language" />
 									</Select.Trigger>
 									<Select.Content class="scrollbar-hide max-h-[300px] overflow-y-auto">
+										<Select.Item value="assamese">Assamese</Select.Item>
+										<Select.Item value="bengali">Bengali</Select.Item>
 										<Select.Item value="english">English</Select.Item>
+										<Select.Item value="gujarati">Gujarati</Select.Item>
 										<Select.Item value="hindi">Hindi</Select.Item>
-										<Select.Item value="spanish">Spanish</Select.Item>
+										<Select.Item value="kannada">Kannada</Select.Item>
+										<Select.Item value="kashmiri">Kashmiri</Select.Item>
+										<Select.Item value="malayalam">Malayalam</Select.Item>
+										<Select.Item value="marathi">Marathi</Select.Item>
+										<Select.Item value="punjabi">Punjabi</Select.Item>
+										<Select.Item value="sanskrit">Sanskrit</Select.Item>
+										<Select.Item value="tamil">Tamil</Select.Item>
+										<Select.Item value="telugu">Telugu</Select.Item>
+										<Select.Item value="urdu">Urdu</Select.Item>
 									</Select.Content>
 								</Select.Root>
 							</Form.Control>
