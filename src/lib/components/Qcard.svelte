@@ -1,59 +1,81 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import * as Card from '$lib/components/ui/card';
-	import { Input } from '$lib/components/ui/input';
-	import * as Select from '$lib/components/ui/select';
-	import * as Form from '$lib/components/ui/form';
-	import { Button } from '$lib/components/ui/button';
-	import { course_name } from './course_name';
-	import { discipline } from './discipline';
-	import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { formSchema2, type FormSchema2 } from './schema';
+import { onMount } from 'svelte';
+import * as Card from '$lib/components/ui/card';
+import { Input } from '$lib/components/ui/input';
+import * as Select from '$lib/components/ui/select';
+import * as Form from '$lib/components/ui/form';
+import { Button } from '$lib/components/ui/button';
+import { course_name } from './course_name';
+import { discipline } from './discipline';
+import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
+import { zodClient } from 'sveltekit-superforms/adapters';
+import { formSchema2, type FormSchema2, nullFormEntry } from './schema';
+import { fade } from 'svelte/transition';
 
-	export let institute: string;
-	export let admin_institute: string;
-	export let quater: string;
-	export let dataform: SuperValidated<Infer<FormSchema2>>;
+let showSuccessMessage = false;
+
+export let institute: string;
+export let admin_institute: string;
+export let quater: string;
+export let dataform: SuperValidated<Infer<FormSchema2>>;
+
+let hasContent = true;
+type FormValue = string | null;
+type FormSelectEvent = { value: FormValue; label: string | null };
 
 	const form = superForm(dataform, {
-		validators: zodClient(formSchema2),
-		dataType: 'json',
-		onSubmit(input) {
-			for (let index = 0; index < $formData.entries.length; index++) {
-				$formData.entries[index].quater = quater;
-				$formData.entries[index].coordinating_institute = institute;
-				$formData.entries[index].admin_institute = admin_institute;
-
-			}
-
-			console.log('input:::::', JSON.stringify(input));
-		}
+	validators: zodClient(formSchema2),
+	dataType: 'json',
+	resetForm: true,
+	onSubmit(input) {
+	  if (!hasContent) {
+	    $formData.entries = [{
+	      chennal_no: null,
+	      course_name: null,
+	      coursename_others: null,
+	      discipline: null,
+	      discipline_others: null,
+	      total_duration: null,
+	      course_reported_financial_year: null,
+	      quater: quater,
+	      sme_name: null,
+	      sme_institute: null,
+	      no_of_videos: null,
+	      course_status: null,
+	      language: null,
+	      course_category: null,
+	      coordinating_institute: institute,
+	      admin_institute: admin_institute
+	    }];
+	  } else {
+	    for (let index = 0; index < $formData.entries.length; index++) {
+	      $formData.entries[index].quater = quater;
+	      $formData.entries[index].coordinating_institute = institute;
+	      $formData.entries[index].admin_institute = admin_institute;
+	    }
+	  }
+	  console.log('input:::::', JSON.stringify(input));
+	},
+	onResult({ result }) {
+	  if (result.type === 'success') {
+	    showSuccessMessage = true;
+	    setTimeout(() => {
+	      showSuccessMessage = false;
+	    }, 3000);
+	  }
+	}
 	});
 	const { form: formData, errors, enhance } = form;
 	function addEntry() {
-		$formData.entries = [
-			...$formData.entries,
-			{
-				chennal_no: '' as '1',
-				course_name: '',
-				coursename_others: '',
-				discipline: '',
-				discipline_others: '',
-				total_duration: '',
-				course_reported_financial_year: '' as 'no',
-				quater: quater,
-				sme_name: '',
-				sme_institute: '',
-				no_of_videos: '' as unknown as number,
-				course_status: '' as 'completed',
-				language: '' as 'english',
-				course_category: '' as 'studio_based_recording',
-				coordinating_institute: institute,
-				admin_institute: admin_institute
-
-			}
-		];
+	$formData.entries = [
+	  ...$formData.entries,
+	  {
+	    ...nullFormEntry,
+	    quater,
+	    coordinating_institute: institute,
+	    admin_institute
+	  }
+	];
 	}
 
 	function removeEntry(index: number) {
@@ -117,10 +139,46 @@
 </script>
 
 <form method="POST" action="?/qcard" use:enhance>
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Enter the course details for {quater.toUpperCase()}</Card.Title>
-		</Card.Header>
+{#if showSuccessMessage}
+<div
+  transition:fade={{ duration: 200 }}
+  class="fixed right-4 top-4 z-50 rounded-md bg-green-500 p-4 text-white shadow-lg">
+  <span class="font-semibold">Success!</span>
+  <p>Form submitted successfully</p>
+</div>
+{/if}
+<Card.Root>
+<Card.Header>
+<div class="flex items-center justify-between">
+<Card.Title>Enter the course details for {quater.toUpperCase()}</Card.Title>
+<div class="flex items-center gap-2">
+<Select.Root
+  selected={{ value: hasContent ? "yes" : "no", label: hasContent ? "Has content" : "No course content" }}
+  onSelectedChange={(s) => {
+    hasContent = s?.value === "yes";
+    if (!hasContent) {
+      $formData.entries = [{
+        ...nullFormEntry,
+        quater,
+        coordinating_institute: institute,
+        admin_institute
+      }];
+    }
+  }}
+>
+  <Select.Trigger class="w-[180px]">
+    <Select.Value placeholder="Select Content Status" />
+  </Select.Trigger>
+  <Select.Content>
+    <Select.Item value="yes">Has content</Select.Item>
+    <Select.Item value="no">No course content</Select.Item>
+  </Select.Content>
+</Select.Root>
+</div>
+</div>
+</Card.Header>
+
+{#if hasContent}
 		{#each $formData.entries as entry, index}
 			<Card.Content
 				class="ml-4 mr-4 mt-4 flex flex-wrap items-end gap-6 space-y-2 rounded-md border-2 border-green-700 pt-4"
@@ -130,20 +188,20 @@
 						<Form.Label>Channel No</Form.Label>
 						<span class="text-red-700"> *</span>
 						<Select.Root
-							selected={{ value: entry.chennal_no, label: entry.chennal_no }}
-							onSelectedChange={(s) => {
-								s && ($formData.entries[index].chennal_no = s.value);
-							}}
+						selected={{ value: entry.chennal_no ?? "", label: entry.chennal_no ?? "Select a channel" }}
+						onSelectedChange={(s) => {
+						  $formData.entries[index].chennal_no = s?.value ?? null;
+						}}
 						>
-							<Select.Input name={attrs.name} />
-							<Select.Trigger {...attrs} class="w-[180px]">
-								<Select.Value placeholder="Select a channel" />
-							</Select.Trigger>
-							<Select.Content class="scrollbar-hide max-h-[300px] overflow-y-auto">
-								{#each channel_nos as value}
-									<Select.Item {value}>{value}</Select.Item>
-								{/each}
-							</Select.Content>
+						<Select.Input name={attrs.name} />
+						<Select.Trigger {...attrs} class="w-[180px]">
+						<Select.Value placeholder="Select a channel" />
+						</Select.Trigger>
+						<Select.Content class="scrollbar-hide max-h-[300px] overflow-y-auto">
+						{#each channel_nos as value}
+						<Select.Item value={value}>{value}</Select.Item>
+						{/each}
+						</Select.Content>
 						</Select.Root>
 					</Form.Control>
 					<Form.FieldErrors />
@@ -153,13 +211,14 @@
 						<Form.Label>Course Name</Form.Label>
 						<span class="text-red-700"> *</span>
 						<Select.Root
-							selected={{ value: entry.course_name, label: entry.course_name }}
-							onSelectedChange={(s) => {
-								s && ($formData.entries[index].course_name = s.value);
-								s && s.value.toLocaleLowerCase() === 'other'
-									? (showCustomCourseName = true)
-									: (showCustomCourseName = false);
-							}}
+						selected={{
+						  value: entry.course_name ?? null,
+						  label: entry.course_name ?? "Select Course Name"
+						}}
+						onSelectedChange={(s) => {
+						  $formData.entries[index].course_name = s?.value ?? null;
+						  showCustomCourseName = s?.value?.toLowerCase() === 'other';
+						}}
 						>
 							<Select.Input name={attrs.name} />
 							<Select.Trigger {...attrs} class="w-[180px]">
@@ -195,13 +254,14 @@
 						<Form.Label>Discipline</Form.Label>
 						<span class="text-red-700"> *</span>
 						<Select.Root
-							selected={{ value: entry.discipline, label: entry.discipline }}
-							onSelectedChange={(s) => {
-								s && ($formData.entries[index].discipline = s.value);
-								s && s.value.toLocaleLowerCase() === 'other'
-									? (showCustomDisciplineName = true)
-									: (showCustomDisciplineName = false);
-							}}
+						selected={{
+						  value: entry.discipline ?? null,
+						  label: entry.discipline ?? "Select Discipline"
+						}}
+						onSelectedChange={(s) => {
+						  $formData.entries[index].discipline = s?.value ?? null;
+						  showCustomDisciplineName = s?.value?.toLowerCase() === 'other';
+						}}
 						>
 							<Select.Input name={attrs.name} />
 							<Select.Trigger {...attrs} class="w-[180px]">
@@ -237,9 +297,12 @@
 						<Form.Label>Language</Form.Label>
 						<span class="text-red-700"> *</span>
 						<Select.Root
-							selected={{ value: entry.language, label: entry.language }}
+							selected={{
+							  value: entry.language ?? null,
+							  label: entry.language ?? "Select Language"
+							}}
 							onSelectedChange={(s) => {
-								s && ($formData.entries[index].language = s.value);
+							  $formData.entries[index].language = s?.value ?? null;
 							}}
 						>
 							<Select.Input name={attrs.name} />
@@ -322,10 +385,13 @@
 						<Form.Label>Course Status</Form.Label>
 						<span class="text-red-700"> *</span>
 						<Select.Root
-							selected={{ value: entry.course_status, label: entry.course_status }}
-							onSelectedChange={(s) => {
-								s && ($formData.entries[index].course_status = s.value);
-							}}
+						selected={{
+						  value: entry.course_status ?? null,
+						  label: entry.course_status ?? "Select Course Status"
+						}}
+						onSelectedChange={(s) => {
+						  $formData.entries[index].course_status = s?.value ?? null;
+						}}
 						>
 							<Select.Input name={attrs.name} />
 							<Select.Trigger {...attrs} class="w-[180px]">
@@ -345,10 +411,13 @@
 						<Form.Label>Course Category</Form.Label>
 						<span class="text-red-700"> *</span>
 						<Select.Root
-							selected={{ value: entry.course_category, label: entry.course_category }}
-							onSelectedChange={(s) => {
-								s && ($formData.entries[index].course_category = s.value);
-							}}
+						selected={{
+						  value: entry.course_category ?? null,
+						  label: entry.course_category ?? "Select Category"
+						}}
+						onSelectedChange={(s) => {
+						  $formData.entries[index].course_category = s?.value ?? null;
+						}}
 						>
 							<Select.Input name={attrs.name} />
 							<Select.Trigger {...attrs} class="w-[180px]">
@@ -371,13 +440,13 @@
 						<Form.Label>Is the course reported on the previous financial year?</Form.Label>
 						<span class="text-red-700"> *</span>
 						<Select.Root
-							selected={{
-								value: entry.course_reported_financial_year,
-								label: entry.course_reported_financial_year
-							}}
-							onSelectedChange={(s) => {
-								s && ($formData.entries[index].course_reported_financial_year = s.value);
-							}}
+						selected={{
+						  value: entry.course_reported_financial_year ?? null,
+						  label: entry.course_reported_financial_year ?? "Select Option"
+						}}
+						onSelectedChange={(s) => {
+						  $formData.entries[index].course_reported_financial_year = s?.value ?? null;
+						}}
 						>
 							<Select.Input name={attrs.name} />
 							<Select.Trigger {...attrs} class="w-[180px]">
@@ -420,15 +489,17 @@
 				</Button>
 			</Card.Content>
 		{/each}
-
+		
 		<br />
 		<div class="flex">
-			<Button type="button" class="mb-6 ml-6" on:click={addEntry}>Add Course</Button>
+		<Button type="button" class="mb-6 ml-6" on:click={addEntry}>Add Course</Button>
 		</div>
+		{/if}
+		
 		<Card.Footer>
-			<Button type="submit">Submit</Button>
-			&nbsp;&nbsp;
-			<Button href="/preview" target="_blank">Click here to view the course list</Button>
+		<Button type="submit">Submit</Button>
+		&nbsp;&nbsp;
+		<Button href="/preview" target="_blank">Click here to view the course list</Button>
 		</Card.Footer>
-	</Card.Root>
-</form>
+		</Card.Root>
+		</form>

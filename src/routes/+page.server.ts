@@ -82,7 +82,8 @@ export const actions: Actions = {
 			}
 		}
 		return {
-			form
+		form,
+		message: "Successfully saved data!"
 		};
 	}
 };
