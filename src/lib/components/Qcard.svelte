@@ -83,7 +83,7 @@ type FormSelectEvent = { value: FormValue; label: string | null };
 	}
 
 	let institute_wise_channels = {
-		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40','Cross Content'],
+		CEC: ['1', '2', '3', '4', '5', '6', '7','Cross Content'],
 		CEC1: ['1','Cross Content'],
 		CEC2: ['2','Cross Content'],
 		CEC3: ['3','Cross Content'],
@@ -91,12 +91,10 @@ type FormSelectEvent = { value: FormValue; label: string | null };
 		CEC5: ['5','Cross Content'],
 		CEC6: ['6','Cross Content'],
 		CEC7: ['7','Cross Content'],
-		CEC8: ['8','Cross Content'],
-		CEC9: ['9','Cross Content'],
-		CEC10: ['10','Cross Content'],
-		CEC40: ['40','Cross Content'],
-
-		IGNOU: ['11', '12', '13', '14', '15', '16','Cross Content'],
+		INFLIBNET: ['8','Cross Content'],
+		'MIC_AICTE': ['9','Cross Content'],
+		IGNOU: ['10','11', '12', '13', '14', '15', '16','Cross Content'],
+		IGNOU10: ['10','Cross Content'],
 		IGNOU11: ['11','Cross Content'],
 		IGNOU12: ['12','Cross Content'],
 
@@ -109,7 +107,6 @@ type FormSelectEvent = { value: FormValue; label: string | null };
 		IGNOU16: [ '16','Cross Content'],
 
 
-
 		'IIT Bombay': ['17', '18', '19', '20','Cross Content'],
 		'IIT Delhi': ['21', '22','Cross Content'],
 		'IIT Gandhinagar': ['23','Cross Content'],
@@ -117,7 +114,7 @@ type FormSelectEvent = { value: FormValue; label: string | null };
 		'IIT Kharagpur': ['29', '30'],
 		'IIT Madras': ['31', '32', '33', '34', '35', '36','Cross Content'],
 		'IIT Tirupati': ['37', '38','Cross Content'],
-		'University of Hyderabad': ['39','Cross Content']
+		'University of Hyderabad': ['39','40','Cross Content']
 	};
 
 	let channel_nos: string[] = [];

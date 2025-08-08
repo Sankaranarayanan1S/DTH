@@ -105,8 +105,10 @@
 	};
 
 	let institute_wise_channels = {
-		CEC: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '40', 'Cross Content'],
-		IGNOU: ['11', '12', '13', '14', '15', '16', 'Cross Content'],
+		CEC: ['1', '2', '3', '4', '5', '6', '7','Cross Content'],
+		INFLIBNET: ['8', 'Cross Content'],
+    	'MIC_AICTE': ['9', 'Cross Content'],
+		IGNOU: ['10','11', '12', '13', '14', '15', '16', 'Cross Content'],
 		'IIT Bombay': ['17', '18', '19', '20', 'Cross Content'],
 		'IIT Delhi': ['21', '22', 'Cross Content'],
 		'IIT Gandhinagar': ['23', 'Cross Content'],
@@ -114,7 +116,7 @@
 		'IIT Kharagpur': ['29', '30', 'Cross Content'],
 		'IIT Madras': ['31', '32', '33', '34', '35', '36', 'Cross Content'],
 		'IIT Tirupati': ['37', '38', 'Cross Content'],
-		'University of Hyderabad': ['39', 'Cross Content']
+		'University of Hyderabad': ['39','40', 'Cross Content']
 	};
 
 	// export let institute: string;
