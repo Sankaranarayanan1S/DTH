@@ -17,6 +17,7 @@ const login: Action = async ({ cookies, request }) => {
 	console.log('login action');
 	const data = await request.formData();
 	const username = data.get('username');
+	// console.log("Username",username)
 	const password = data.get('password');
 
 	if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
@@ -32,6 +33,7 @@ const login: Action = async ({ cookies, request }) => {
 	}
 
 	const userPassword = await bcrypt.compare(password, user.password);
+
 
 	if (!userPassword) {
 		return fail(400, { credentials: true });
