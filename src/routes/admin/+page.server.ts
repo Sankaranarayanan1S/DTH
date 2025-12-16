@@ -28,24 +28,47 @@ type CourseDetails = {
 	admin_institute: string;
 };
 
-export const load: PageServerLoad = async ({ locals }) => {
+type InstituteQuarterSummary = {
+	admin_institute: string;
+	Q1_Duration: string | null;
+	Q2_Duration: string | null;
+	Q3_Duration: string | null;
+	Q4_Duration: string | null;
+	Total_Duration: string | null;
+};
+
+const availableYearsList = ['2024 - 2025', '2025 - 2026', '2026 - 2027'] as const;
+
+export const load: PageServerLoad = async ({ locals, url }) => {
 	// redirect user if not logged in
 	if (!locals.user || locals.user.role != 'admin') {
 		throw redirect(302, '/login');
 	}
-	if (locals.user.username == 'CEC' || locals.user.username == 'IGNOU') {
-		const [results]: [CourseDetails[]] = await db.execute(
-			'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, discipline_others, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, admin_institute as coordinating_institute FROM course_details'
-		);
-		console.log('preview:', results);
-		return { results, form2: await superValidate(zod(formEntrySchema)) };
-	} else {
-		const [results]: [CourseDetails[]] = await db.execute(
-			'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, discipline_others, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, admin_institute as coordinating_institute FROM course_details'
-		);
-		console.log('preview:', results);
-		return { results, form2: await superValidate(zod(formEntrySchema)) };
-	}
+
+	const requestedYear = url.searchParams.get('year');
+	const isValidYear =
+		requestedYear !== null &&
+		availableYearsList.includes(requestedYear as (typeof availableYearsList)[number]);
+	const selectedYear = isValidYear
+		? (requestedYear as (typeof availableYearsList)[number])
+		: availableYearsList[0];
+
+	const [results]: [CourseDetails[]] = await db.execute(
+		'SELECT id, year, quater, chennal_no, course_name,coursename_others, discipline, discipline_others, total_duration, course_reported_financial_year, quater, sme_name, sme_institute, no_of_videos, course_status, language, course_category, admin_institute as coordinating_institute FROM course_details'
+	);
+	const [adminSummary]: [InstituteQuarterSummary[]] = await db.execute(
+		"SELECT admin_institute, SEC_TO_TIME(SUM(IF(quater='q1', TIME_TO_SEC(total_duration), 0))) AS Q1_Duration, SEC_TO_TIME(SUM(IF(quater='q2', TIME_TO_SEC(total_duration), 0))) AS Q2_Duration, SEC_TO_TIME(SUM(IF(quater='q3', TIME_TO_SEC(total_duration), 0))) AS Q3_Duration, SEC_TO_TIME(SUM(IF(quater='q4', TIME_TO_SEC(total_duration), 0))) AS Q4_Duration, SEC_TO_TIME(SUM(TIME_TO_SEC(total_duration))) AS Total_Duration FROM course_details WHERE year = ? GROUP BY admin_institute",
+		[selectedYear]
+	);
+	console.log('preview:', results);
+
+	return {
+		results,
+		adminSummary,
+		selectedYear,
+		availableYears: availableYearsList,
+		form2: await superValidate(zod(formEntrySchema))
+	};
 };
 
 export const actions: Actions = {
