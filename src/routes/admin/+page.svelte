@@ -7,8 +7,8 @@
 		addHiddenColumns,
 		addSelectedRows
 	} from 'svelte-headless-table/plugins';
-	import * as Select from '$lib/components/ui/select';
-	import { readable, type Writable } from 'svelte/store';
+import * as Select from '$lib/components/ui/select';
+import { readable, writable, get, type Writable } from 'svelte/store';
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import * as Table from '$lib/components/ui/table';
@@ -21,21 +21,26 @@
 	import { Pencil } from 'lucide-svelte';
 	import EditButton from './editButton.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Form from '$lib/components/ui/form';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import SuperDebug, { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
+import * as Form from '$lib/components/ui/form';
+import { zodClient } from 'sveltekit-superforms/adapters';
+import SuperDebug, { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
+import { mkConfig, generateCsv, download } from 'export-to-csv';
 	import {
 		formEntrySchema,
 		formSchema2,
 		type FormSchema2,
 		type FormEntrySchema
 	} from '$lib/components/schema';
-	import { course_name } from '$lib/components/course_name';
-	import { discipline } from '$lib/components/discipline';
-	import { writable } from 'svelte/store';
-	import { invalidateAll } from '$app/navigation';
+import { course_name } from '$lib/components/course_name';
+import { discipline } from '$lib/components/discipline';
+import { goto } from '$app/navigation';
 
-	export let data;
+export let data;
+let adminSummary = data.adminSummary ?? [];
+let availableYears = data.availableYears ?? [];
+let selectedYear: string =
+	data.selectedYear ?? (availableYears.length ? availableYears[0] : '2024 - 2025');
+let activeTab: 'courses' | 'summary' = 'courses';
 
 	// import { CaretSortIcon, ChevronDownIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
 
@@ -185,16 +190,71 @@
 	// 	}
 	// ];
 
-	const table = createTable(readable(data.results), {
-		page: addPagination(),
-		sort: addSortBy({ disableMultiSort: true }),
-		filter: addTableFilter({
-			includeHiddenColumns: true,
-			fn: ({ filterValue, value }) => value.includes(filterValue)
-		}),
-		hide: addHiddenColumns(),
-		select: addSelectedRows()
+const table = createTable(readable(data.results), {
+	page: addPagination(),
+	sort: addSortBy({ disableMultiSort: true }),
+	filter: addTableFilter({
+		includeHiddenColumns: true,
+		fn: ({ filterValue, value }) => value.includes(filterValue)
+	}),
+	hide: addHiddenColumns(),
+	select: addSelectedRows()
+});
+
+// Config follows the recommended options from the official export-to-csv docs:
+// https://www.npmjs.com/package/export-to-csv
+const csvConfig = mkConfig({
+	fieldSeparator: ',',
+	filename: 'course-data',
+	decimalSeparator: '.',
+	useBom: true,
+	useKeysAsHeaders: true
+});
+
+const runCsvExport = () => {
+	const filteredRows = get(rows);
+
+	if (!filteredRows?.length) {
+		console.warn('No rows available to export.');
+		return;
+	}
+
+	const exporter = generateCsv(csvConfig);
+	const downloader = download(csvConfig);
+	const dataset = filteredRows.map((row) => row.original);
+	downloader(exporter(dataset));
+};
+
+const runSummaryCsvExport = () => {
+	const summaryData = adminSummary ?? [];
+
+	if (!summaryData.length) {
+		console.warn('No institute duration data available to export.');
+		return;
+	}
+
+	const filenameYear = selectedYear?.replace(/\s+/g, '') ?? 'summary';
+	const summaryConfig = mkConfig({
+		fieldSeparator: ',',
+		filename: `institute-durations-${filenameYear}`,
+		decimalSeparator: '.',
+		useBom: true,
+		useKeysAsHeaders: true
 	});
+
+	const exporter = generateCsv(summaryConfig);
+	const downloader = download(summaryConfig);
+	const dataset = summaryData.map((row) => ({
+		Institute: row.admin_institute,
+		Q1_Duration: row.Q1_Duration ?? '00:00:00',
+		Q2_Duration: row.Q2_Duration ?? '00:00:00',
+		Q3_Duration: row.Q3_Duration ?? '00:00:00',
+		Q4_Duration: row.Q4_Duration ?? '00:00:00',
+		Total_Duration: row.Total_Duration ?? '00:00:00'
+	}));
+
+	downloader(exporter(dataset));
+};
 
 	const columns = table.createColumns([
 		// table.column({
@@ -386,6 +446,29 @@
 			event.target.blur();
 		}
 	}
+
+function handleYearChange(year: string | null) {
+	if (!year || year === selectedYear) {
+		return;
+	}
+
+	selectedYear = year;
+
+	if (typeof window === 'undefined') return;
+
+	const params = new URLSearchParams(window.location.search);
+	params.set('year', year);
+
+	goto(`?${params.toString()}`, {
+		replaceState: true,
+		keepFocus: true,
+		noScroll: true
+	});
+}
+
+$: adminSummary = data.adminSummary ?? [];
+$: availableYears = data.availableYears ?? [];
+$: selectedYear = data.selectedYear ?? selectedYear;
 </script>
 
 <!-- <SuperDebug data={$formData} /> -->
@@ -396,113 +479,136 @@
 		{:else if !data}
 			<p>No profile data</p>
 		{:else} -->
-		<!-- <Button
-			class="mb-4"
-			type="button"
-			on:click={() => exportExcel(table.getFilteredRowModel().rows)}
-		>
-			Download CSV
-		</Button>
-		&nbsp; -->
-		
-		<!-- <Button>
-			<a href="/">Home page</a>
-		</Button> -->
 
-		<div>
-			<div class="flex items-center py-4">
-				<Input
-					class="max-w-sm"
-					placeholder="Filter emails..."
-					type="text"
-					bind:value={$filterValue}
-				/>
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger asChild let:builder>
-						<Button variant="outline" class="ml-auto" builders={[builder]}>
-							Columns <ChevronDown class="ml-2 h-4 w-4" />
-						</Button>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						{#each flatColumns as col}
-							{#if hidableCols.includes(col.id)}
-								<DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
-									{col.header}
-								</DropdownMenu.CheckboxItem>
-							{/if}
-						{/each}
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+		<div class="mb-6 border-b border-zinc-200">
+			<nav class="-mb-px flex flex-wrap gap-4 text-sm font-medium text-muted-foreground">
+				<button
+					type="button"
+					class={`border-b-2 pb-2 transition focus-visible:outline-none ${
+						activeTab === 'courses'
+							? 'border-orange-500 text-orange-600'
+							: 'border-transparent hover:text-zinc-900'
+					}`}
+					on:click={() => (activeTab = 'courses')}
+				>
+					Course Details
+				</button>
+				<button
+					type="button"
+					class={`border-b-2 pb-2 transition focus-visible:outline-none ${
+						activeTab === 'summary'
+							? 'border-orange-500 text-orange-600'
+							: 'border-transparent hover:text-zinc-900'
+					}`}
+					on:click={() => (activeTab = 'summary')}
+				>
+					Institute Durations
+				</button>
+			</nav>
+		</div>
+
+		{#if activeTab === 'courses'}
+			<div class="mb-4 flex flex-wrap gap-2">
+				<Button type="button" on:click={runCsvExport}>Download CSV</Button>
+				<!-- <Button variant="outline">
+					<a href="/" target="_blank">Home page</a>
+				</Button> -->
 			</div>
-			<div class="rounded-md border">
-				<Table.Root {...$tableAttrs}>
-					<Table.Header>
-						{#each $headerRows as headerRow}
-							<Subscribe rowAttrs={headerRow.attrs()}>
-								<Table.Row>
-									{#each headerRow.cells as cell, i (cell.id)}
-										<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-											<Table.Head {...attrs} class="[&:has([role=checkbox])]:pl-3">
-												{#if cell.id === 'amount'}
-													<div class="text-right">
+
+			<div>
+				<div class="flex items-center py-4">
+					<Input
+						class="max-w-sm"
+						placeholder="Filter emails..."
+						type="text"
+						bind:value={$filterValue}
+					/>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger asChild let:builder>
+							<Button variant="outline" class="ml-auto" builders={[builder]}>
+								Columns <ChevronDown class="ml-2 h-4 w-4" />
+							</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content>
+							{#each flatColumns as col}
+								{#if hidableCols.includes(col.id)}
+									<DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
+										{col.header}
+									</DropdownMenu.CheckboxItem>
+								{/if}
+							{/each}
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				</div>
+				<div class="rounded-md border">
+					<Table.Root {...$tableAttrs}>
+						<Table.Header>
+							{#each $headerRows as headerRow}
+								<Subscribe rowAttrs={headerRow.attrs()}>
+									<Table.Row>
+										{#each headerRow.cells as cell, i (cell.id)}
+											<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
+												<Table.Head {...attrs} class="[&:has([role=checkbox])]:pl-3">
+													{#if cell.id === 'amount'}
+														<div class="text-right">
+															<Button variant="ghost" on:click={props.sort.toggle}>
+																<Render of={cell.render()} />
+																<ArrowUpDown class={'ml-2 h-4 w-4'} />
+															</Button>
+														</div>
+													{:else if cell.id === 'email'}
 														<Button variant="ghost" on:click={props.sort.toggle}>
 															<Render of={cell.render()} />
 															<ArrowUpDown class={'ml-2 h-4 w-4'} />
 														</Button>
-													</div>
-												{:else if cell.id === 'email'}
-													<Button variant="ghost" on:click={props.sort.toggle}>
+													{:else}
 														<Render of={cell.render()} />
-														<ArrowUpDown class={'ml-2 h-4 w-4'} />
-													</Button>
-												{:else}
-													<Render of={cell.render()} />
-												{/if}
-											</Table.Head>
-										</Subscribe>
-									{/each}
-								</Table.Row>
-							</Subscribe>
-						{/each}
-					</Table.Header>
-					<Table.Body {...$tableBodyAttrs}>
-						{#each $pageRows as row, i (row.id)}
-							<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-								<Table.Row {...rowAttrs}>
-									<!-- data-state={$selectedDataIds[row.id] && 'selected'} -->
-									{#each row.cells as cell (cell.id)}
-										<Subscribe attrs={cell.attrs()} let:attrs>
-											<Table.Cell {...attrs} class="[&:has([role=checkbox])]:pl-3">
-												{#if cell.id === 'amount'}
-													<div class="text-right font-medium">
+													{/if}
+												</Table.Head>
+											</Subscribe>
+										{/each}
+									</Table.Row>
+								</Subscribe>
+							{/each}
+						</Table.Header>
+						<Table.Body {...$tableBodyAttrs}>
+							{#each $pageRows as row, i (row.id)}
+								<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
+									<Table.Row {...rowAttrs}>
+										<!-- data-state={$selectedDataIds[row.id] && 'selected'} -->
+										{#each row.cells as cell (cell.id)}
+											<Subscribe attrs={cell.attrs()} let:attrs>
+												<Table.Cell {...attrs} class="[&:has([role=checkbox])]:pl-3">
+													{#if cell.id === 'amount'}
+														<div class="text-right font-medium">
+															<Render of={cell.render()} />
+														</div>
+													{:else if cell.id === 'status'}
+														<div class="capitalize">
+															<Render of={cell.render()} />
+														</div>
+													{:else}
 														<Render of={cell.render()} />
-													</div>
-												{:else if cell.id === 'status'}
-													<div class="capitalize">
-														<Render of={cell.render()} />
-													</div>
-												{:else}
-													<Render of={cell.render()} />
-												{/if}
-											</Table.Cell>
-										</Subscribe>
-									{/each}
-								</Table.Row>
-							</Subscribe>
-						{/each}
-					</Table.Body>
-				</Table.Root>
-			</div>
+													{/if}
+												</Table.Cell>
+											</Subscribe>
+										{/each}
+									</Table.Row>
+								</Subscribe>
+							{/each}
+						</Table.Body>
+					</Table.Root>
+				</div>
 
-			<Dialog.Root bind:open={$isDialogOpen}>
-				<Dialog.Content class="sm:max-w-[800px]">
-					<Dialog.Header>
-						<Dialog.Title>Edit Course Details</Dialog.Title>
-						<Dialog.Description>
-							Make changes to the course details here. Click save when you're done.
-						</Dialog.Description>
-					</Dialog.Header>
-					<form method="POST" action="?/ucard" use:enhance class="flex flex-wrap items-end gap-4">
+				<Dialog.Root bind:open={$isDialogOpen}>
+					<Dialog.Content class="sm:max-w-[800px]">
+						<Dialog.Header>
+							<Dialog.Title>Edit Course Details</Dialog.Title>
+							<Dialog.Description>
+								Make changes to the course details here. Click save when you're done.
+							</Dialog.Description>
+						</Dialog.Header>
+						<form method="POST" action="?/ucard" use:enhance class="flex flex-wrap items-end gap-4">
 						<Form.Field {form} name="chennal_no">
 							<Form.Control let:attrs>
 								<Form.Label>Channel No</Form.Label>
@@ -792,5 +898,63 @@
 			</div>
 			<!-- {/if} -->
 		</div>
+	{:else}
+		<div class="mb-4 flex flex-wrap items-center gap-3">
+			<span class="text-sm font-medium text-muted-foreground">Financial Year</span>
+			<Select.Root
+				selected={{ value: selectedYear, label: selectedYear }}
+				onSelectedChange={(s) => handleYearChange(s?.value ?? null)}
+			>
+				<Select.Trigger class="w-[200px]">
+					<Select.Value placeholder="Select Year" class="text-left" />
+				</Select.Trigger>
+				<Select.Content class="max-h-[250px] overflow-y-auto">
+					{#each availableYears as year}
+						<Select.Item value={year}>{year}</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+			<Button class="ml-auto" type="button" on:click={runSummaryCsvExport}>
+				Download CSV
+			</Button>
+		</div>
+
+		<div class="rounded-md border">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>Institute</Table.Head>
+						<Table.Head>Q1 Duration</Table.Head>
+						<Table.Head>Q2 Duration</Table.Head>
+						<Table.Head>Q3 Duration</Table.Head>
+						<Table.Head>Q4 Duration</Table.Head>
+						<Table.Head>Total Duration</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#if adminSummary.length === 0}
+						<Table.Row>
+							<Table.Cell colspan={6} class="text-center text-muted-foreground">
+								No duration data available for the selected year.
+							</Table.Cell>
+						</Table.Row>
+					{:else}
+						{#each adminSummary as summary (summary.admin_institute)}
+							<Table.Row>
+								<Table.Cell class="font-medium">{summary.admin_institute}</Table.Cell>
+								<Table.Cell>{summary.Q1_Duration ?? '00:00:00'}</Table.Cell>
+								<Table.Cell>{summary.Q2_Duration ?? '00:00:00'}</Table.Cell>
+								<Table.Cell>{summary.Q3_Duration ?? '00:00:00'}</Table.Cell>
+								<Table.Cell>{summary.Q4_Duration ?? '00:00:00'}</Table.Cell>
+								<Table.Cell class="font-semibold">
+									{summary.Total_Duration ?? '00:00:00'}
+								</Table.Cell>
+							</Table.Row>
+						{/each}
+					{/if}
+				</Table.Body>
+			</Table.Root>
+		</div>
+	{/if}
 	</div>
 </main>

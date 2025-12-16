@@ -7,8 +7,8 @@
 		addHiddenColumns,
 		addSelectedRows
 	} from 'svelte-headless-table/plugins';
-	import * as Select from '$lib/components/ui/select';
-	import { readable, type Writable } from 'svelte/store';
+import * as Select from '$lib/components/ui/select';
+import { readable, writable, get, type Writable } from 'svelte/store';
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import * as Table from '$lib/components/ui/table';
@@ -21,9 +21,10 @@
 	import { Pencil } from 'lucide-svelte';
 	import EditButton from './editButton.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Form from '$lib/components/ui/form';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import SuperDebug, { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
+import * as Form from '$lib/components/ui/form';
+import { zodClient } from 'sveltekit-superforms/adapters';
+import SuperDebug, { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
+import { mkConfig, generateCsv, download } from 'export-to-csv';
 	import {
 		formEntrySchema,
 		formSchema2,
@@ -31,8 +32,7 @@
 		type FormEntrySchema
 	} from '$lib/components/schema';
 	import { course_name } from '$lib/components/course_name';
-	import { discipline } from '$lib/components/discipline';
-	import { writable } from 'svelte/store';
+import { discipline } from '$lib/components/discipline';
 	import { invalidateAll } from '$app/navigation';
 
 	export let data;
@@ -344,6 +344,29 @@
 	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, flatColumns, rows } =
 		table.createViewModel(columns);
 
+	// Config mirrors the recommended options from the official export-to-csv docs:
+	// https://www.npmjs.com/package/export-to-csv
+	const csvConfig = mkConfig({
+		fieldSeparator: ',',
+		filename: 'course-data',
+		decimalSeparator: '.',
+		useBom: true,
+		useKeysAsHeaders: true
+	});
+
+	const runCsvExport = () => {
+		const filteredRows = get(rows);
+
+		if (!filteredRows?.length) {
+			console.warn('No rows available to export.');
+			return;
+		}
+
+		const exporter = generateCsv(csvConfig);
+		const downloader = download(csvConfig);
+		downloader(exporter(filteredRows.map((row) => row.original)));
+	};
+
 	const { pageIndex, hasNextPage, hasPreviousPage } = pluginStates.page;
 	const { filterValue } = pluginStates.filter;
 	const { hiddenColumnIds } = pluginStates.hide;
@@ -396,15 +419,10 @@
 		{:else if !data}
 			<p>No profile data</p>
 		{:else} -->
-		<!-- <Button
-			class="mb-4"
-			type="button"
-			on:click={() => exportExcel(table.getFilteredRowModel().rows)}
-		>
+		<Button class="mb-4" type="button" on:click={runCsvExport}>
 			Download CSV
 		</Button>
-		&nbsp; -->
-		<Button>
+		<Button class="ml-2">
 			<a href="/" target="_blank">Home page</a>
 		</Button>
 
