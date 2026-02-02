@@ -40,7 +40,32 @@ let adminSummary = data.adminSummary ?? [];
 let availableYears = data.availableYears ?? [];
 let selectedYear: string =
 	data.selectedYear ?? (availableYears.length ? availableYears[0] : '2024 - 2025');
-let activeTab: 'courses' | 'summary' = 'courses';
+let activeTab: 'courses' | 'summary' | 'youtube_statistics' | 'youtube_summary' = 'courses';
+
+let youtubeStats = data.youtubeStats ?? [];
+let youtubeSummary = data.youtubeSummary ?? [];
+let youtubeCategorySummary = data.youtubeCategorySummary ?? [];
+let youtubeChannelCategories = data.youtubeChannelCategories ?? [];
+let youtubeYears = data.youtubeYears ?? [];
+let selectedYtCategory: string =
+	data.selectedYtCategory ?? (youtubeChannelCategories.length ? youtubeChannelCategories[0] : '22 Channels');
+let selectedYtYear: number =
+	data.selectedYtYear ?? (youtubeYears.length ? youtubeYears[0] : 2017);
+let selectedYtSummaryCategory: string =
+	data.selectedYtSummaryCategory ?? (youtubeChannelCategories.length ? youtubeChannelCategories[0] : '22 Channels');
+
+let ytSummaryMenu: 'by_channel' | 'summary' = 'by_channel';
+
+// Mapping of channel categories to their available years
+const categoryToYears: Record<string, number[]> = {
+	'22 Channels': [2021, 2022, 2023],
+	'32 Channels': [2017, 2018, 2019, 2020],
+	'40 Channels': [2023, 2024, 2025],
+	'40 Channels Rearrangement': [2025]
+};
+
+// Reactive variable for available years based on selected category
+$: availableYtYears = categoryToYears[selectedYtCategory] ?? [];
 
 	// import { CaretSortIcon, ChevronDownIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
 
@@ -256,6 +281,99 @@ const runSummaryCsvExport = () => {
 	downloader(exporter(dataset));
 };
 
+const runYoutubeStatsCsvExport = () => {
+	const statsData = youtubeStats ?? [];
+
+	if (!statsData.length) {
+		console.warn('No YouTube statistics data available to export.');
+		return;
+	}
+
+	const filenameCategory = selectedYtCategory?.replace(/\s+/g, '') ?? 'youtube-stats';
+	const filenameYear = selectedYtYear?.toString() ?? 'all-years';
+	const statsConfig = mkConfig({
+		fieldSeparator: ',',
+		filename: `youtube-statistics-${filenameCategory}-${filenameYear}`,
+		decimalSeparator: '.',
+		useBom: true,
+		useKeysAsHeaders: true
+	});
+
+	const exporter = generateCsv(statsConfig);
+	const downloader = download(statsConfig);
+	const dataset = statsData.map((row) => ({
+		'Channel Name': row.Channels_Name,
+		'National Coordinator': row.national_coordinator,
+		'Broadcast Videos Count': row.broadcast_videos,
+		'Broadcast Videos Hours': row.broadcast_videos_hours,
+		'Youtube Views': row.Youtube_Views,
+		'Youtube Subscriptions': row.Youtube_Subscription,
+		Year: row.Year
+	}));
+
+	downloader(exporter(dataset));
+};
+
+const runYoutubeSummaryCsvExport = () => {
+	if (ytSummaryMenu === 'by_channel') {
+		const summaryData = youtubeSummary ?? [];
+
+		if (!summaryData.length) {
+			console.warn('No YouTube summary data available to export.');
+			return;
+		}
+
+		const filenameCategory = selectedYtSummaryCategory?.replace(/\s+/g, '') ?? 'youtube-summary';
+		const summaryConfig = mkConfig({
+			fieldSeparator: ',',
+			filename: `youtube-summary-by-channel-${filenameCategory}`,
+			decimalSeparator: '.',
+			useBom: true,
+			useKeysAsHeaders: true
+		});
+
+		const exporter = generateCsv(summaryConfig);
+		const downloader = download(summaryConfig);
+		const dataset = summaryData.map((row) => ({
+			'Channel Number': row.Channel_Number ?? 'TOTAL',
+			'Total Broadcast Videos Count': row.Total_Broadcast_Videos_Count,
+			'Total Broadcast Videos Hours': row.Total_Broadcast_Videos_Hours,
+			'Total Youtube Views': row.Total_Youtube_Views,
+			'Total Youtube Subscriptions': row.total_youtube_subscription
+		}));
+
+		downloader(exporter(dataset));
+	} else {
+		const categorySummaryData = sortedYoutubeCategorySummary ?? [];
+
+		if (!categorySummaryData.length) {
+			console.warn('No YouTube category summary data available to export.');
+			return;
+		}
+
+		const categoryConfig = mkConfig({
+			fieldSeparator: ',',
+			filename: 'youtube-summary-by-category',
+			decimalSeparator: '.',
+			useBom: true,
+			useKeysAsHeaders: true
+		});
+
+		const exporter = generateCsv(categoryConfig);
+		const downloader = download(categoryConfig);
+		const dataset = categorySummaryData.map((row) => ({
+			'Channel Category': row.channel_category ?? 'TOTAL',
+			Years: row.Years ?? '',
+			'Total Broadcast Videos Count': row.Total_Broadcast_Videos_Count,
+			'Total Broadcast Videos Hours': row.Total_Broadcast_Videos_Hours,
+			'Total Youtube Views': row.Total_Youtube_Views,
+			'Total Youtube Subscription': row.Total_Youtube_Subscription
+		}));
+
+		downloader(exporter(dataset));
+	}
+};
+
 	const columns = table.createColumns([
 		// table.column({
 		// 	accessor: 'id',
@@ -466,9 +584,110 @@ function handleYearChange(year: string | null) {
 	});
 }
 
+function handleYtCategoryChange(category: string | null) {
+	if (!category || category === selectedYtCategory) {
+		return;
+	}
+
+	selectedYtCategory = category;
+
+	// Auto-select the first available year for the selected category
+	const availableYears = categoryToYears[category] ?? [];
+	if (availableYears.length > 0) {
+		selectedYtYear = availableYears[0];
+	}
+
+	if (typeof window === 'undefined') return;
+
+	const params = new URLSearchParams(window.location.search);
+	params.set('ytCategory', category);
+	if (availableYears.length > 0) {
+		params.set('ytYear', availableYears[0].toString());
+	}
+
+	goto(`?${params.toString()}`, {
+		replaceState: true,
+		keepFocus: true,
+		noScroll: true
+	});
+}
+
+function handleYtYearChange(year: number | null) {
+	if (!year || year === selectedYtYear) {
+		return;
+	}
+
+	selectedYtYear = year;
+
+	if (typeof window === 'undefined') return;
+
+	const params = new URLSearchParams(window.location.search);
+	params.set('ytYear', year.toString());
+
+	goto(`?${params.toString()}`, {
+		replaceState: true,
+		keepFocus: true,
+		noScroll: true
+	});
+}
+
+function handleYtSummaryCategoryChange(category: string | null) {
+	if (!category || category === selectedYtSummaryCategory) {
+		return;
+	}
+
+	selectedYtSummaryCategory = category;
+
+	if (typeof window === 'undefined') return;
+
+	const params = new URLSearchParams(window.location.search);
+	params.set('ytSummaryCategory', category);
+
+	goto(`?${params.toString()}`, {
+		replaceState: true,
+		keepFocus: true,
+		noScroll: true
+	});
+}
+
 $: adminSummary = data.adminSummary ?? [];
 $: availableYears = data.availableYears ?? [];
 $: selectedYear = data.selectedYear ?? selectedYear;
+$: youtubeStats = data.youtubeStats ?? [];
+$: youtubeSummary = data.youtubeSummary ?? [];
+$: youtubeCategorySummary = data.youtubeCategorySummary ?? [];
+$: youtubeChannelCategories = data.youtubeChannelCategories ?? [];
+$: youtubeYears = data.youtubeYears ?? [];
+$: selectedYtCategory = data.selectedYtCategory ?? selectedYtCategory;
+$: selectedYtYear = data.selectedYtYear ?? selectedYtYear;
+$: selectedYtSummaryCategory = data.selectedYtSummaryCategory ?? selectedYtSummaryCategory;
+
+// Sort summary data in the specified order: 32 Channels, 22 Channels, 40 Channels, 40 Channels Rearrangement, TOTAL
+$: sortedYoutubeCategorySummary = (() => {
+	const categoryOrder: Record<string, number> = {
+		'32 Channels': 1,
+		'22 Channels': 2,
+		'40 Channels': 3,
+		'40 Channels Rearrangement': 4,
+		'TOTAL': 999
+	};
+	
+	const summary = youtubeCategorySummary ?? [];
+	return [...summary].sort((a, b) => {
+		const aCategory = a.channel_category ?? 'TOTAL';
+		const bCategory = b.channel_category ?? 'TOTAL';
+		const aOrder = categoryOrder[aCategory] ?? 999;
+		const bOrder = categoryOrder[bCategory] ?? 999;
+		return aOrder - bOrder;
+	});
+})();
+
+// Ensure selected year is valid for the current category (only adjust if invalid, don't update URL here)
+$: {
+	if (availableYtYears.length > 0 && !availableYtYears.includes(selectedYtYear)) {
+		selectedYtYear = availableYtYears[0];
+	}
+}
 </script>
 
 <!-- <SuperDebug data={$formData} /> -->
@@ -503,6 +722,28 @@ $: selectedYear = data.selectedYear ?? selectedYear;
 					on:click={() => (activeTab = 'summary')}
 				>
 					Institute Durations
+				</button>
+				<button
+					type="button"
+					class={`border-b-2 pb-2 transition focus-visible:outline-none ${
+						activeTab === 'youtube_statistics'
+							? 'border-orange-500 text-orange-600'
+							: 'border-transparent hover:text-zinc-900'
+					}`}
+					on:click={() => (activeTab = 'youtube_statistics')}
+				>
+					Youtube Channel/Year wise Statistics
+				</button>
+				<button
+					type="button"
+					class={`border-b-2 pb-2 transition focus-visible:outline-none ${
+						activeTab === 'youtube_summary'
+							? 'border-orange-500 text-orange-600'
+							: 'border-transparent hover:text-zinc-900'
+					}`}
+					on:click={() => (activeTab = 'youtube_summary')}
+				>
+					Youtube Summary
 				</button>
 			</nav>
 		</div>
@@ -898,7 +1139,7 @@ $: selectedYear = data.selectedYear ?? selectedYear;
 			</div>
 			<!-- {/if} -->
 		</div>
-	{:else}
+	{:else if activeTab === 'summary'}
 		<div class="mb-4 flex flex-wrap items-center gap-3">
 			<span class="text-sm font-medium text-muted-foreground">Financial Year</span>
 			<Select.Root
@@ -955,6 +1196,332 @@ $: selectedYear = data.selectedYear ?? selectedYear;
 				</Table.Body>
 			</Table.Root>
 		</div>
+	{:else if activeTab === 'youtube_statistics'}
+		<div class="mb-4 flex flex-wrap items-center gap-3">
+			<span class="text-sm font-medium text-muted-foreground">Channel Category</span>
+			<Select.Root
+				selected={{ value: selectedYtCategory, label: selectedYtCategory }}
+				onSelectedChange={(s) => handleYtCategoryChange(s?.value ?? null)}
+			>
+				<Select.Trigger class="w-[200px]">
+					<Select.Value placeholder="Select Category" class="text-left" />
+				</Select.Trigger>
+				<Select.Content class="max-h-[250px] overflow-y-auto">
+					{#each youtubeChannelCategories as category}
+						<Select.Item value={category}>{category}</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+
+			<span class="text-sm font-medium text-muted-foreground">Year</span>
+			<Select.Root
+				selected={{ value: selectedYtYear.toString(), label: selectedYtYear.toString() }}
+				onSelectedChange={(s) => handleYtYearChange(s?.value ? Number(s.value) : null)}
+			>
+				<Select.Trigger class="w-[200px]">
+					<Select.Value placeholder="Select Year" class="text-left" />
+				</Select.Trigger>
+				<Select.Content class="max-h-[250px] overflow-y-auto">
+					{#each availableYtYears as year}
+						<Select.Item value={year.toString()}>{year}</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+			<Button class="ml-auto" type="button" on:click={runYoutubeStatsCsvExport}>
+				Download CSV
+			</Button>
+		</div>
+
+		<div class="rounded-md border">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>Channel Name</Table.Head>
+						<Table.Head>National Coordinator</Table.Head>
+						<Table.Head>Broadcast Videos Count</Table.Head>
+						<Table.Head>Broadcast Videos Hours</Table.Head>
+						<Table.Head>Youtube Views</Table.Head>
+						<Table.Head>Youtube Subscriptions</Table.Head>
+						<Table.Head>Year</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#if youtubeStats.length === 0}
+						<Table.Row>
+							<Table.Cell colspan={7} class="text-center text-muted-foreground">
+								No statistics data available for the selected category and year.
+							</Table.Cell>
+						</Table.Row>
+					{:else}
+						{#each youtubeStats as stat (stat.Channels_Name + stat.Year)}
+							<Table.Row>
+								<Table.Cell class="font-medium">{stat.Channels_Name}</Table.Cell>
+								<Table.Cell>{stat.national_coordinator}</Table.Cell>
+								<Table.Cell>{stat.broadcast_videos}</Table.Cell>
+								<Table.Cell>{stat.broadcast_videos_hours}</Table.Cell>
+								<Table.Cell>{stat.Youtube_Views.toLocaleString()}</Table.Cell>
+								<Table.Cell>{stat.Youtube_Subscription.toLocaleString()}</Table.Cell>
+								<Table.Cell>{stat.Year}</Table.Cell>
+							</Table.Row>
+						{/each}
+					{/if}
+				</Table.Body>
+			</Table.Root>
+		</div>
+	{:else if activeTab === 'youtube_summary'}
+		<!-- Enhanced Menu Navigation -->
+		<div class="mb-6">
+			<div class="mb-4 flex flex-wrap items-center gap-2 border-b border-zinc-200 pb-3">
+				<button
+					type="button"
+					class={`rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+						ytSummaryMenu === 'by_channel'
+							? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+							: 'bg-white text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 border border-zinc-200'
+					}`}
+					on:click={() => (ytSummaryMenu = 'by_channel')}
+				>
+					By Channel Number
+				</button>
+				<button
+					type="button"
+					class={`rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+						ytSummaryMenu === 'summary'
+							? 'bg-orange-500 text-white shadow-md shadow-orange-200'
+							: 'bg-white text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 border border-zinc-200'
+					}`}
+					on:click={() => (ytSummaryMenu = 'summary')}
+				>
+					Summary
+				</button>
+			</div>
+			{#if ytSummaryMenu === 'by_channel'}
+				<div class="flex flex-wrap items-center gap-3">
+					<span class="text-sm font-semibold text-zinc-700">Channel Category</span>
+					<Select.Root
+						selected={{ value: selectedYtSummaryCategory, label: selectedYtSummaryCategory }}
+						onSelectedChange={(s) => handleYtSummaryCategoryChange(s?.value ?? null)}
+					>
+						<Select.Trigger class="w-[200px]">
+							<Select.Value placeholder="Select Category" class="text-left" />
+						</Select.Trigger>
+						<Select.Content class="max-h-[250px] overflow-y-auto">
+							{#each youtubeChannelCategories as category}
+								<Select.Item value={category}>{category}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+					<Button class="ml-auto" type="button" on:click={runYoutubeSummaryCsvExport}>
+						Download CSV
+					</Button>
+				</div>
+			{:else if ytSummaryMenu === 'summary'}
+				<div class="flex flex-wrap items-center gap-3">
+					<div class="rounded-lg bg-gradient-to-r from-orange-50 to-amber-50 p-4 border border-orange-100 flex-1">
+						<h3 class="text-lg font-bold text-zinc-800 mb-1">Category-wise Summary</h3>
+						<p class="text-sm text-zinc-600">
+							Aggregated statistics across all channel categories with total overview
+						</p>
+					</div>
+					<Button class="ml-auto" type="button" on:click={runYoutubeSummaryCsvExport}>
+						Download CSV
+					</Button>
+				</div>
+			{/if}
+		</div>
+
+		{#if ytSummaryMenu === 'by_channel'}
+			<div class="rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
+				<Table.Root>
+					<Table.Header>
+						<Table.Row class="bg-zinc-50">
+							<Table.Head class="font-semibold text-zinc-700">Channel Number</Table.Head>
+							<Table.Head class="font-semibold text-zinc-700">Total Broadcast Videos Count</Table.Head>
+							<Table.Head class="font-semibold text-zinc-700">Total Broadcast Videos Hours</Table.Head>
+							<Table.Head class="font-semibold text-zinc-700">Total Youtube Views</Table.Head>
+							<Table.Head class="font-semibold text-zinc-700">Total Youtube Subscriptions</Table.Head>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
+						{#if youtubeSummary.length === 0}
+							<Table.Row>
+								<Table.Cell colspan={5} class="text-center text-muted-foreground py-8">
+									No summary data available for the selected category.
+								</Table.Cell>
+							</Table.Row>
+						{:else}
+							{#each youtubeSummary as summary (summary.Channel_Number ?? 'TOTAL')}
+								<Table.Row
+									class={`transition-colors ${
+										summary.Channel_Number === 'TOTAL'
+											? 'bg-gradient-to-r from-orange-100 to-amber-50 font-semibold border-t-2 border-orange-300'
+											: 'hover:bg-zinc-50'
+									}`}
+								>
+									<Table.Cell
+										class={`py-3 ${
+											summary.Channel_Number === 'TOTAL'
+												? 'font-bold text-orange-900 text-base'
+												: 'font-medium text-zinc-800'
+										}`}
+									>
+										{summary.Channel_Number ?? 'TOTAL'}
+									</Table.Cell>
+									<Table.Cell
+										class={summary.Channel_Number === 'TOTAL' ? 'font-semibold text-zinc-900' : 'text-zinc-700'}
+									>
+										{summary.Total_Broadcast_Videos_Count.toLocaleString()}
+									</Table.Cell>
+									<Table.Cell
+										class={summary.Channel_Number === 'TOTAL' ? 'font-semibold text-zinc-900' : 'text-zinc-700'}
+									>
+										{summary.Total_Broadcast_Videos_Hours}
+									</Table.Cell>
+									<Table.Cell
+										class={summary.Channel_Number === 'TOTAL' ? 'font-semibold text-zinc-900' : 'text-zinc-700'}
+									>
+										{summary.Total_Youtube_Views.toLocaleString()}
+									</Table.Cell>
+									<Table.Cell
+										class={summary.Channel_Number === 'TOTAL' ? 'font-semibold text-zinc-900' : 'text-zinc-700'}
+									>
+										{summary.total_youtube_subscription.toLocaleString()}
+									</Table.Cell>
+								</Table.Row>
+							{/each}
+						{/if}
+					</Table.Body>
+				</Table.Root>
+			</div>
+		{:else}
+			<div class="rounded-lg border border-zinc-200 shadow-sm overflow-hidden bg-white">
+				<Table.Root>
+					<Table.Header>
+						<Table.Row class="bg-gradient-to-r from-orange-500 to-amber-500">
+							<Table.Head class="font-bold text-white text-sm">Channel Category</Table.Head>
+							<Table.Head class="font-bold text-white text-sm">Years</Table.Head>
+							<Table.Head class="font-bold text-white text-sm text-right">Total Broadcast Videos Count</Table.Head>
+							<Table.Head class="font-bold text-white text-sm">Total Broadcast Videos Hours</Table.Head>
+							<Table.Head class="font-bold text-white text-sm text-right">Total Youtube Views</Table.Head>
+							<Table.Head class="font-bold text-white text-sm text-right">Total Youtube Subscription</Table.Head>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
+						{#if sortedYoutubeCategorySummary.length === 0}
+							<Table.Row>
+								<Table.Cell colspan={6} class="text-center text-muted-foreground py-12">
+									<div class="flex flex-col items-center gap-2">
+										<svg
+											class="w-12 h-12 text-zinc-300"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+											/>
+										</svg>
+										<p class="text-base font-medium">No summary data available</p>
+									</div>
+								</Table.Cell>
+							</Table.Row>
+						{:else}
+							{#each sortedYoutubeCategorySummary as row (row.channel_category ?? 'TOTAL')}
+								<Table.Row
+									class={`transition-all ${
+										row.channel_category === 'TOTAL'
+											? 'bg-gradient-to-r from-orange-100 via-orange-50 to-amber-50 font-bold border-t-4 border-orange-400 shadow-sm'
+											: 'hover:bg-zinc-50 border-b border-zinc-100'
+									}`}
+								>
+									<Table.Cell
+										class={`py-4 ${
+											row.channel_category === 'TOTAL'
+												? 'font-extrabold text-orange-900 text-lg'
+												: 'font-semibold text-zinc-800'
+										}`}
+									>
+										{#if row.channel_category === 'TOTAL'}
+											<span class="inline-flex items-center gap-2">
+												<svg
+													class="w-5 h-5 text-orange-600"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+													/>
+												</svg>
+												{row.channel_category}
+											</span>
+										{:else}
+											<span class="inline-flex items-center gap-2">
+												<span
+													class="w-2 h-2 rounded-full bg-orange-400"
+												></span>
+												{row.channel_category}
+											</span>
+										{/if}
+									</Table.Cell>
+									<Table.Cell
+										class={row.channel_category === 'TOTAL' ? 'font-semibold text-zinc-900' : 'text-zinc-700'}
+									>
+										{#if row.Years}
+											<span
+												class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800"
+											>
+												{row.Years}
+											</span>
+										{:else}
+											<span class="text-zinc-400">-</span>
+										{/if}
+									</Table.Cell>
+									<Table.Cell
+										class={`text-right ${
+											row.channel_category === 'TOTAL'
+												? 'font-bold text-zinc-900 text-base'
+												: 'font-medium text-zinc-800'
+										}`}
+									>
+										{row.Total_Broadcast_Videos_Count.toLocaleString()}
+									</Table.Cell>
+									<Table.Cell
+										class={row.channel_category === 'TOTAL' ? 'font-semibold text-zinc-900' : 'text-zinc-700 font-mono'}
+									>
+										{row.Total_Broadcast_Videos_Hours}
+									</Table.Cell>
+									<Table.Cell
+										class={`text-right ${
+											row.channel_category === 'TOTAL'
+												? 'font-bold text-zinc-900 text-base'
+												: 'font-medium text-zinc-800'
+										}`}
+									>
+										{row.Total_Youtube_Views.toLocaleString()}
+									</Table.Cell>
+									<Table.Cell
+										class={`text-right ${
+											row.channel_category === 'TOTAL'
+												? 'font-bold text-zinc-900 text-base'
+												: 'font-medium text-zinc-800'
+										}`}
+									>
+										{row.Total_Youtube_Subscription.toLocaleString()}
+									</Table.Cell>
+								</Table.Row>
+							{/each}
+						{/if}
+					</Table.Body>
+				</Table.Root>
+			</div>
+		{/if}
 	{/if}
 	</div>
 </main>
