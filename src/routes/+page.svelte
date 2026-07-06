@@ -17,7 +17,7 @@
 
 		<div class="mb-8 flex w-full justify-between">
 			<div class="flex items-center gap-4">
-				<p class="text-nowrap">Financial Year: 2025-2026</p>
+				<p class="text-nowrap">Financial Year: 2026-2027</p>
 			</div>
 		</div>
 		<Tabs value="Q1" class="w-full">
