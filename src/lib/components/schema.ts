@@ -20,7 +20,7 @@ const financialYears = ['yes', 'no'] as ['yes', 'no'];
 const courseStatuses = ['completed', 'ongoing'] as ['completed', 'ongoing'];
 const languages = [
   'assamese', 'bengali', 'english', 'gujarati', 'hindi', 'kannada', 'kashmiri',
-  'malayalam', 'marathi', 'punjabi', 'sanskrit', 'tamil', 'telugu', 'urdu'
+  'malayalam', 'marathi', 'punjabi', 'sanskrit', 'tamil', 'telugu', 'urdu','Manipuri', 'Odia', 'Noida'
 ] as ['assamese', ...string[]];
 const courseCategories = [
   'studio_based_recording', 'live_sessions', 'conferences', 'workshops', 'special_series'
