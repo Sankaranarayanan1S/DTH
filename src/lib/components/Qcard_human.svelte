@@ -205,6 +205,9 @@
 							<Select.Item class="pr-6" value="Tamil">Tamil</Select.Item>
 							<Select.Item class="pr-6" value="Telugu">Telugu</Select.Item>
 							<Select.Item class="pr-6" value="Urdu">Urdu</Select.Item>
+							<Select.Item class="pr-6" value="Manipuri">Manipuri</Select.Item>
+							<Select.Item class="pr-6" value="Odia">Odia</Select.Item>
+							<Select.Item class="pr-6" value="Noida">Noida</Select.Item>
 							<!-- </Select.Group> -->
 						</Select.Content>
 						<Select.Input name="language" />
