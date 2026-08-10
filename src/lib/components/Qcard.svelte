@@ -320,7 +320,9 @@ type FormSelectEvent = { value: FormValue; label: string | null };
 								<Select.Item value="sanskrit">Sanskrit</Select.Item>
 								<Select.Item value="tamil">Tamil</Select.Item>
 								<Select.Item value="telugu">Telugu</Select.Item>
-								<Select.Item value="urdu">Urdu</Select.Item>
+								<Select.Item value="Manipurit">Manipuri</Select.Item>
+								<Select.Item value="Odia">Odia</Select.Item>
+								<Select.Item value="Noida">Noida</Select.Item>
 							</Select.Content>
 						</Select.Root>
 					</Form.Control>
